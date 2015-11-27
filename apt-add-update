@@ -27,7 +27,9 @@ def duplicate_check(entries):
 		for newsource in new_entries:
 			if source.type == newsource.type and source.uri == newsource.uri and source.dist == newsource.dist:
 				for comp in newsource.comps:
-					source.comps.remove(comp)
+					if comp in source.comps:
+						source.comps.remove(comp)
+
 		if len(source.comps) > 0:
 			new_entries.append(source)
 	return new_entries
