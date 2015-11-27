@@ -42,6 +42,9 @@ if __name__ == "__main__":
 		os.sys.exit(0)
 
 	sourcelist = aptsources.sourceslist.SourcesList()
+	sourcelist.list = []
+	sourcelist.load('/etc/apt/sources.list')
+
 	main_entries = []
 	child_entries = []
 	other_entries = []
@@ -80,7 +83,11 @@ if __name__ == "__main__":
 				uri = source.uri
 				if os.sys.argv[2] == "security":
 					uri = "http://security.ubuntu.com/ubuntu"
-				line = source.type + " " + uri + " " + source.dist + "-" + os.sys.argv[2] + " " + " ".join(source.comps)
+				comps = []
+				for i in source.comps:
+					if i in ['main', 'restrict', 'backports', 'proposed']:
+						comps.append(i)
+				line = source.type + " " + uri + " " + source.dist + "-" + os.sys.argv[2] + " " + " ".join(comps)
 				sourceentry = aptsources.sourceslist.SourceEntry(line)
 				child_entries.append(sourceentry)
 
@@ -90,7 +97,11 @@ if __name__ == "__main__":
 			uri = source.uri
 			if get_subdistname(source.dist) == "security":
 				uri = "http://archive.ubuntu.com/ubuntu"
-			line = source.type + " " + uri + " " + get_distname(source.dist) + " " + " ".join(source.comps)
+			comps = []
+			for i in source.comps:
+				if i in ['main', 'restrict', 'backports', 'proposed']:
+					comps.append(i)
+			line = source.type + " " + uri + " " + get_distname(source.dist) + " " + " ".join(comps)
 			sourceentry = aptsources.sourceslist.SourceEntry(line)
 			main_entries.append(sourceentry)
 
