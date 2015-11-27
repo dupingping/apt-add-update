@@ -1,0 +1,95 @@
+#!/usr/bin/python
+
+import aptsources.sourceslist
+import os
+
+subdistnames = ['updates', 'security', 'proposed', 'backports']
+
+def get_subdistname(distname):
+	rc = "default"
+	try:
+		rc = distname.split("-")[1]
+	except:
+		pass
+	return rc
+
+def get_distname(distname):
+	rc = distname
+	try:
+		rc = distname.split("-")[0]
+	except:
+		pass
+	return rc
+
+if __name__ == "__main__":
+	if len(os.sys.argv) != 3 or \
+	    os.sys.argv[1] not in ['enable', 'disable'] or \
+	    ( os.sys.argv[2] not in subdistnames and os.sys.argv[2] != 'default' ):
+		print "Usage: apt-add-update <enable|disable> <default|updates|security|proposed|backports>"
+		os.sys.exit(0)
+
+	sourcelist = aptsources.sourceslist.SourcesList()
+	main_entries = []
+	child_entries = []
+	other_entries = []
+
+	distro_names = []
+
+	for tmpl in sourcelist.matcher.templates:
+		if tmpl.name.find('-') > 0:
+			continue
+		distro_names.append(tmpl.name)
+
+	for source in sourcelist.list:
+		if source.invalid or source.disabled:
+			continue
+		subdistname = get_subdistname(source.dist)
+
+		if source.dist in distro_names:
+			main_entries.append(source)
+		elif subdistname in subdistnames:
+			child_entries.append(source)
+		else:
+			other_entries.append(source)
+
+	if os.sys.argv[2] in subdistnames:
+		modified = True
+		while modified:
+			modified = False
+			for source in child_entries:
+				if get_subdistname(source.dist) == os.sys.argv[2]:
+					child_entries.remove(source)
+					modified = True
+					continue
+
+		if os.sys.argv[1] == "enable":
+			for source in main_entries:
+				uri = source.uri
+				if os.sys.argv[2] == "security":
+					uri = "http://security.ubuntu.com/ubuntu"
+				line = source.type + " " + uri + " " + source.dist + "-" + os.sys.argv[2] + " " + " ".join(source.comps)
+				sourceentry = aptsources.sourceslist.SourceEntry(line)
+				child_entries.append(sourceentry)
+
+	else:
+		main_entries = []
+		for source in child_entries:
+			uri = source.uri
+			if get_subdistname(source.dist) == "security":
+				uri = "http://archive.ubuntu.com/ubuntu"
+			line = source.type + " " + uri + " " + get_distname(source.dist) + " " + " ".join(source.comps)
+			sourceentry = aptsources.sourceslist.SourceEntry(line)
+
+			for main in main_entries:
+				if main.type == sourceentry.type and main.uri == sourceentry.uri and main.dist == sourceentry.dist:
+					for comp in main.comps:
+						sourceentry.comps.remove(comp)
+			if len(sourceentry.comps) > 0:
+				main_entries.append(sourceentry)
+
+	sourcelist.list = []
+	sourcelist.list.extend(main_entries)
+	sourcelist.list.extend(child_entries)
+	sourcelist.list.extend(other_entries)
+
+	sourcelist.save()
