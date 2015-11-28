@@ -49,10 +49,10 @@ if __name__ == "__main__":
 	child_entries = []
 	other_entries = []
 
-	distro_names = ['wily']
+	distro_names = []
 
 	for tmpl in sourcelist.matcher.templates:
-		if tmpl.name.find('-') > 0:
+		if tmpl.name.find('-') > 0 or tmpl.distribution != "Ubuntu":
 			continue
 		distro_names.append(tmpl.name)
 
