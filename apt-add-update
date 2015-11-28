@@ -93,17 +93,18 @@ if __name__ == "__main__":
 
 	else:
 		main_entries = []
-		for source in child_entries:
-			uri = source.uri
-			if get_subdistname(source.dist) == "security":
-				uri = "http://archive.ubuntu.com/ubuntu"
-			comps = []
-			for i in source.comps:
-				if i in ['main', 'restricted', 'universe', 'multiverse']:
-					comps.append(i)
-			line = source.type + " " + uri + " " + get_distname(source.dist) + " " + " ".join(comps)
-			sourceentry = aptsources.sourceslist.SourceEntry(line)
-			main_entries.append(sourceentry)
+		if os.sys.argv[1] == "enable":
+			for source in child_entries:
+				uri = source.uri
+				if get_subdistname(source.dist) == "security":
+					uri = "http://archive.ubuntu.com/ubuntu"
+				comps = []
+				for i in source.comps:
+					if i in ['main', 'restricted', 'universe', 'multiverse']:
+						comps.append(i)
+				line = source.type + " " + uri + " " + get_distname(source.dist) + " " + " ".join(comps)
+				sourceentry = aptsources.sourceslist.SourceEntry(line)
+				main_entries.append(sourceentry)
 
 	main_entries = duplicate_check(main_entries)
 	child_entries = duplicate_check(child_entries)
